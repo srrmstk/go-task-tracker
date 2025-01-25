@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"go-task-tracker/internal/config"
+	"go-task-tracker/internal/logger"
 	"os"
 )
 
@@ -14,9 +14,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println(cfg)
+	log := logger.InitLogger(cfg.Env)
 
-	// TODO: init logger - log/slog
+	log.Info("Starting the application", "env", cfg.Env)
+	log.Debug("Debugging is enabled")
+
 	// TODO: init storage - postgres + redis
 	// TODO: init router - net/http
 
