@@ -2,7 +2,7 @@ package config
 
 import (
 	"errors"
-	"log"
+	"fmt"
 	"os"
 	"time"
 
@@ -24,31 +24,28 @@ type HTTPServerConfig struct {
 }
 
 type DBConfig struct {
-	PostgresDSN string `yaml:"postgres_dsn" env-default:"postgres://postgres:postgres@localhost:5432/task_tracker?sslmode=disable"`
+	PostgresDSN string `yaml:"postgres_dsn"`
 }
 
 type Config struct {
 	Env        Environment      `yaml:"env" env-default:"local"`
 	HTTPServer HTTPServerConfig `yaml:"http_server"`
-	Database   DBConfig         `yaml:"db"`
+	Database   DBConfig         `yaml:"database"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {
 	if configPath == "" {
-		log.Printf("Config path is empty")
 		return nil, errors.New("config path is empty")
 	}
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Printf("Config file not found: %s", configPath)
-		return nil, err
+		return nil, fmt.Errorf("config file not found: %s", configPath)
 	}
 
 	var config Config
 
 	if err := cleanenv.ReadConfig(configPath, &config); err != nil {
-		log.Printf("Failed to load config: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to load config: %v", err)
 	}
 
 	return &config, nil

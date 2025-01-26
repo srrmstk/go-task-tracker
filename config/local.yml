@@ -4,4 +4,4 @@ http_server:
   timeout: 5s
   idle_timeout: 60s
 database:
-  postgres_dsn: "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+  postgres_dsn: "host=localhost port=5432 user=user password=password dbname=go_task_tracker sslmode=disable"
