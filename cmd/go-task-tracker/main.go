@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"go-task-tracker/internal/config"
 	"go-task-tracker/internal/logger"
 	"go-task-tracker/internal/storage"
 	goLog "log"
+	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -27,9 +34,45 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info(db.DriverName())
-	// TODO: init router - net/http
+	_ = db
 
-	// http.HandleFunc("/tasks", handleTasks)
-	//http.ListenAndServe(":8000", nil)
+	httpServer := initHttpServer(cfg, log)
+
+	ctx := context.Background()
+
+	gracefulShutdown(ctx, log, httpServer)
+}
+
+func initHttpServer(cfg *config.Config, log *slog.Logger) *http.Server {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello world!"))
+	})
+
+	httpServer := &http.Server{
+		ReadTimeout: cfg.HTTPServer.Timeout * time.Second,
+		IdleTimeout: cfg.HTTPServer.IdleTimeout * time.Second,
+		Addr:        cfg.HTTPServer.Address,
+		Handler:     mux,
+	}
+
+	go func() {
+		log.Info("Starting HTTP server", "address", cfg.HTTPServer.Address)
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error(err.Error())
+			os.Exit(1)
+		}
+	}()
+
+	return httpServer
+}
+
+func gracefulShutdown(ctx context.Context, log *slog.Logger, server *http.Server) {
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, syscall.SIGINT, syscall.SIGTERM)
+	<-exit
+
+	log.Info("Gracefully shutting down")
+	server.Shutdown(ctx)
 }

@@ -6,7 +6,7 @@ compose-dev:
 	@echo "Starting docker-compose"
 	docker-compose -f docker-compose.dev.yml up
 
-compose-dev-detached:
+compose-dev-d:
 	@echo "Starting docker-compose-build"
 	docker-compose -f docker-compose.dev.yml up -d
 

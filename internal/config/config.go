@@ -33,19 +33,25 @@ type Config struct {
 	Database   DBConfig         `yaml:"database"`
 }
 
+const (
+	ErrConfigPathEmpty = "config path is empty"
+	ErrConfigNotFound  = "config file not found"
+	ErrFailedToLoad    = "failed to load config"
+)
+
 func LoadConfig(configPath string) (*Config, error) {
 	if configPath == "" {
-		return nil, errors.New("config path is empty")
+		return nil, errors.New(ErrConfigPathEmpty)
 	}
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("config file not found: %s", configPath)
+		return nil, fmt.Errorf("%v: %s", ErrConfigNotFound, configPath)
 	}
 
 	var config Config
 
 	if err := cleanenv.ReadConfig(configPath, &config); err != nil {
-		return nil, fmt.Errorf("failed to load config: %v", err)
+		return nil, fmt.Errorf("%v: %v", ErrFailedToLoad, err)
 	}
 
 	return &config, nil
