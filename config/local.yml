@@ -1,7 +1,0 @@
-env: "local" # local, dev, prod
-http_server:
-  address: "localhost:8080"
-  timeout: 5s
-  idle_timeout: 60s
-database:
-  postgres_dsn: "host=localhost port=5432 user=user password=password dbname=go_task_tracker sslmode=disable"

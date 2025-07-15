@@ -1,6 +1,6 @@
 run:
 	@echo "Starting server"
-	go run cmd/go-task-tracker/main.go
+	go run cmd/server/main.go
 
 compose-dev:
 	@echo "Starting docker-compose"
@@ -11,5 +11,5 @@ compose-dev-d:
 	docker-compose -f docker-compose.dev.yml up -d
 
 compose-dev-down:
-	@echo "Starting docker-compose"
+	@echo "Stopping docker-compose"
 	docker-compose -f docker-compose.dev.yml down
