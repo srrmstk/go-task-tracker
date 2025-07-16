@@ -1,15 +1,21 @@
 package task
 
 import (
+	"context"
 	"encoding/json"
 	"go-task-tracker/internal/model"
-	"go-task-tracker/internal/service"
 	"log/slog"
 	"net/http"
 )
 
-func CreateTaskHandler(log *slog.Logger, s *service.TaskService) http.HandlerFunc {
+type taskCreator interface {
+	Create(context.Context, *model.Task) error
+}
+
+func CreateTaskHandler(log *slog.Logger, tc taskCreator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		var t model.Task
 		log.Debug("GetTaskHandler", "body", t)
 
@@ -18,12 +24,11 @@ func CreateTaskHandler(log *slog.Logger, s *service.TaskService) http.HandlerFun
 			return
 		}
 
-		if err := s.Create(r.Context(), &t); err != nil {
+		if err := tc.Create(r.Context(), &t); err != nil {
 			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(t)
 	}

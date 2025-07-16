@@ -1,18 +1,45 @@
 package task
 
 import (
-	"fmt"
+	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"go-task-tracker/internal/model"
+	"log/slog"
 	"net/http"
+	"strconv"
 )
 
-func PutTaskHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	if id == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Task ID not provided!"))
-		return
-	}
+type taskUpdater interface {
+	Update(context.Context, int64, *model.TaskUpdate) error
+}
 
-	response := fmt.Sprintf("Task ID: %v updated", id)
-	w.Write([]byte(response))
+func UpdateTaskHandler(log *slog.Logger, tu taskUpdater) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		idStr := r.PathValue("id")
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			http.Error(w, "invalid Id", http.StatusBadRequest)
+			return
+		}
+
+		var t model.TaskUpdate
+		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+			http.Error(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		err = tu.Update(r.Context(), id, &t)
+		switch {
+		case err == nil:
+			w.WriteHeader(http.StatusNoContent)
+		case errors.Is(err, sql.ErrNoRows):
+			http.Error(w, "task not found", http.StatusNotFound)
+		default:
+			http.Error(w, "failed to update", http.StatusInternalServerError)
+		}
+	}
 }

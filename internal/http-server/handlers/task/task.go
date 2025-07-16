@@ -7,18 +7,18 @@ import (
 	"net/http"
 )
 
-type TaskController struct {
+type taskController struct {
 	s *service.TaskService
 }
 
-func NewTaskController(s *service.TaskService) *TaskController {
-	return &TaskController{s: s}
+func NewTaskController(s *service.TaskService) *taskController {
+	return &taskController{s: s}
 }
 
-func (t *TaskController) Register(mux *http.ServeMux, log *slog.Logger) {
-	mux.HandleFunc("GET /tasks", logger.LoggerMiddleware(log, GetTasksHandler(t.s)))
-	// mux.HandleFunc("GET /tasks/{id}", logger.LoggerMiddleware(log, GetOneTaskHandler(log, t.s)))
-	mux.HandleFunc("POST /tasks", logger.LoggerMiddleware(log, CreateTaskHandler(log, t.s)))
-	// mux.HandleFunc("PUT /tasks/{id}", logger.LoggerMiddleware(log, PutTaskHandler))
+func (c *taskController) Register(mux *http.ServeMux, log *slog.Logger) {
+	mux.HandleFunc("GET /tasks", logger.LoggerMiddleware(log, GetTasksHandler(c.s)))
+	mux.HandleFunc("GET /tasks/{id}", logger.LoggerMiddleware(log, GetOneTaskHandler(log, c.s)))
+	mux.HandleFunc("POST /tasks", logger.LoggerMiddleware(log, CreateTaskHandler(log, c.s)))
+	mux.HandleFunc("PUT /tasks/{id}", logger.LoggerMiddleware(log, UpdateTaskHandler(log, c.s)))
 	// mux.HandleFunc("DELETE /tasks/{id}", logger.LoggerMiddleware(log, DeleteTaskHandler))
 }
