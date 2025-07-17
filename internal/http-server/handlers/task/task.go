@@ -16,9 +16,9 @@ func NewTaskController(s *service.TaskService) *taskController {
 }
 
 func (c *taskController) Register(mux *http.ServeMux, log *slog.Logger) {
-	mux.HandleFunc("GET /tasks", logger.LoggerMiddleware(log, GetTasksHandler(c.s)))
+	mux.HandleFunc("GET /tasks", logger.LoggerMiddleware(log, GetTasksHandler(log, c.s)))
 	mux.HandleFunc("GET /tasks/{id}", logger.LoggerMiddleware(log, GetOneTaskHandler(log, c.s)))
 	mux.HandleFunc("POST /tasks", logger.LoggerMiddleware(log, CreateTaskHandler(log, c.s)))
 	mux.HandleFunc("PUT /tasks/{id}", logger.LoggerMiddleware(log, UpdateTaskHandler(log, c.s)))
-	// mux.HandleFunc("DELETE /tasks/{id}", logger.LoggerMiddleware(log, DeleteTaskHandler))
+	mux.HandleFunc("DELETE /tasks/{id}", logger.LoggerMiddleware(log, DeleteTaskHandler(log, c.s)))
 }

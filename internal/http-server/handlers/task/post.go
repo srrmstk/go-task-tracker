@@ -9,7 +9,7 @@ import (
 )
 
 type taskCreator interface {
-	Create(context.Context, *model.Task) error
+	Create(ctx context.Context, m *model.Task) error
 }
 
 func CreateTaskHandler(log *slog.Logger, tc taskCreator) http.HandlerFunc {
@@ -25,6 +25,7 @@ func CreateTaskHandler(log *slog.Logger, tc taskCreator) http.HandlerFunc {
 		}
 
 		if err := tc.Create(r.Context(), &t); err != nil {
+			log.Debug(err.Error())
 			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 			return
 		}

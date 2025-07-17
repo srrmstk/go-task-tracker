@@ -12,7 +12,7 @@ import (
 )
 
 type taskUpdater interface {
-	Update(context.Context, int64, *model.TaskUpdate) error
+	Update(ctx context.Context, id int64, m *model.TaskUpdate) error
 }
 
 func UpdateTaskHandler(log *slog.Logger, tu taskUpdater) http.HandlerFunc {
@@ -39,6 +39,7 @@ func UpdateTaskHandler(log *slog.Logger, tu taskUpdater) http.HandlerFunc {
 		case errors.Is(err, sql.ErrNoRows):
 			http.Error(w, "task not found", http.StatusNotFound)
 		default:
+			log.Debug(err.Error())
 			http.Error(w, "failed to update", http.StatusInternalServerError)
 		}
 	}

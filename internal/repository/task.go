@@ -17,6 +17,7 @@ type TaskRepository interface {
 	GetByID(ctx context.Context, id int64) (model.Task, error)
 	Create(ctx context.Context, task *model.Task) error
 	Update(ctx context.Context, id int64, task *model.TaskUpdate) error
+	Delete(ctx context.Context, id int64) error
 }
 
 func NewTaskRepository(db *sqlx.DB) TaskRepository {
@@ -63,5 +64,19 @@ func (r *repository) Update(ctx context.Context, id int64, task *model.TaskUpdat
 		return sql.ErrNoRows
 	}
 
+	return nil
+}
+
+func (r *repository) Delete(ctx context.Context, id int64) error {
+	query := "DELETE FROM tasks WHERE id = $1"
+	res, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
 	return nil
 }

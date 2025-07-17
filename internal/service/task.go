@@ -36,3 +36,7 @@ func (s *TaskService) Update(ctx context.Context, id int64, t *model.TaskUpdate)
 	}
 	return s.repo.Update(ctx, id, t)
 }
+
+func (s *TaskService) Delete(ctx context.Context, id int64) error {
+	return s.repo.Delete(ctx, id)
+}
