@@ -1,4 +1,4 @@
-package task
+package memo
 
 import (
 	"context"
@@ -11,11 +11,11 @@ import (
 	"strconv"
 )
 
-type TaskProvider interface {
-	GetByID(ctx context.Context, id int64) (model.Task, error)
+type MemoProvider interface {
+	GetByID(ctx context.Context, id int64) (model.Memo, error)
 }
 
-func GetOneTaskHandler(log *slog.Logger, tg TaskProvider) http.HandlerFunc {
+func GetOneMemoHandler(log *slog.Logger, mp MemoProvider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -26,12 +26,12 @@ func GetOneTaskHandler(log *slog.Logger, tg TaskProvider) http.HandlerFunc {
 			return
 		}
 
-		task, err := tg.GetByID(r.Context(), id)
+		memo, err := mp.GetByID(r.Context(), id)
 		switch {
 		case err == nil:
-			json.NewEncoder(w).Encode(task)
+			json.NewEncoder(w).Encode(memo)
 		case errors.Is(err, sql.ErrNoRows):
-			http.Error(w, "task not found", http.StatusNotFound)
+			http.Error(w, "memo not found", http.StatusNotFound)
 		default:
 			log.Debug(err.Error())
 			http.Error(w, "something went wrong", http.StatusInternalServerError)

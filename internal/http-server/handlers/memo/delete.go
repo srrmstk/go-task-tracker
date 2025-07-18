@@ -1,4 +1,4 @@
-package task
+package memo
 
 import (
 	"context"
@@ -9,11 +9,11 @@ import (
 	"strconv"
 )
 
-type TaskDelete interface {
+type MemoDelete interface {
 	Delete(ctx context.Context, id int64) error
 }
 
-func DeleteTaskHandler(log *slog.Logger, td TaskDelete) http.HandlerFunc {
+func DeleteMemoHandler(log *slog.Logger, md MemoDelete) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 
@@ -24,13 +24,13 @@ func DeleteTaskHandler(log *slog.Logger, td TaskDelete) http.HandlerFunc {
 			return
 		}
 
-		err = td.Delete(r.Context(), id)
+		err = md.Delete(r.Context(), id)
 
 		switch {
 		case err == nil:
 			w.WriteHeader(http.StatusNoContent)
 		case errors.Is(err, sql.ErrNoRows):
-			http.Error(w, "Task not found", http.StatusNotFound)
+			http.Error(w, "Memo not found", http.StatusNotFound)
 		default:
 			log.Debug(err.Error())
 			http.Error(w, "Something went wrong", http.StatusInternalServerError)

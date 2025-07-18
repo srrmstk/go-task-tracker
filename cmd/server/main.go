@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"errors"
-	"go-task-tracker/internal/http-server/handlers/task"
+	"go-task-tracker/internal/http-server/handlers/memo"
 	"go-task-tracker/internal/repository"
 	"go-task-tracker/internal/service"
 	"go-task-tracker/pkg/storage"
@@ -46,12 +46,12 @@ func initHttpServer(log *slog.Logger, db *sqlx.DB) *http.Server {
 	const readTimeout = 60
 	const idleTimeout = 5
 
-	taskRepo := repository.NewTaskRepository(db)
-	taskService := service.NewTaskService(taskRepo)
-	taskController := task.NewTaskController(taskService)
+	memoRepo := repository.NewMemoRepository(db)
+	memoService := service.NewMemoService(memoRepo)
+	memoController := memo.NewMemoController(memoService)
 
 	mux := http.NewServeMux()
-	taskController.Register(mux, log)
+	memoController.Register(mux, log)
 
 	httpServer := &http.Server{
 		ReadTimeout: readTimeout * time.Second,

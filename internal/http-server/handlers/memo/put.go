@@ -1,4 +1,4 @@
-package task
+package memo
 
 import (
 	"context"
@@ -11,11 +11,11 @@ import (
 	"strconv"
 )
 
-type taskUpdater interface {
-	Update(ctx context.Context, id int64, m *model.TaskUpdate) error
+type memoUpdater interface {
+	Update(ctx context.Context, id int64, m *model.MemoUpdate) error
 }
 
-func UpdateTaskHandler(log *slog.Logger, tu taskUpdater) http.HandlerFunc {
+func UpdateMemoHandler(log *slog.Logger, mu memoUpdater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -26,18 +26,18 @@ func UpdateTaskHandler(log *slog.Logger, tu taskUpdater) http.HandlerFunc {
 			return
 		}
 
-		var t model.TaskUpdate
-		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+		var m model.MemoUpdate
+		if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
 			http.Error(w, "invalid request body", http.StatusBadRequest)
 			return
 		}
 
-		err = tu.Update(r.Context(), id, &t)
+		err = mu.Update(r.Context(), id, &m)
 		switch {
 		case err == nil:
 			w.WriteHeader(http.StatusNoContent)
 		case errors.Is(err, sql.ErrNoRows):
-			http.Error(w, "task not found", http.StatusNotFound)
+			http.Error(w, "memo not found", http.StatusNotFound)
 		default:
 			log.Debug(err.Error())
 			http.Error(w, "failed to update", http.StatusInternalServerError)

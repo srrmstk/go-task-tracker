@@ -1,4 +1,4 @@
-package task
+package memo
 
 import (
 	"context"
@@ -8,29 +8,29 @@ import (
 	"net/http"
 )
 
-type taskCreator interface {
-	Create(ctx context.Context, m *model.Task) error
+type memoCreator interface {
+	Create(ctx context.Context, m *model.Memo) error
 }
 
-func CreateTaskHandler(log *slog.Logger, tc taskCreator) http.HandlerFunc {
+func CreateMemoHandler(log *slog.Logger, mc memoCreator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		var t model.Task
-		log.Debug("GetTaskHandler", "body", t)
+		var m model.Memo
+		log.Debug("GetMemoHandler", "body", m)
 
-		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if err := tc.Create(r.Context(), &t); err != nil {
+		if err := mc.Create(r.Context(), &m); err != nil {
 			log.Debug(err.Error())
 			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(t)
+		json.NewEncoder(w).Encode(m)
 	}
 }

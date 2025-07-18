@@ -2,15 +2,17 @@ package model
 
 import "time"
 
-type Task struct {
+type Memo struct {
 	ID          int64     `db:"id" json:"id"`
 	Title       string    `db:"title" json:"title"`
 	Description string    `db:"description" json:"description"`
+	Score       int       `db:"score" json:"score"`
 	CreatedAt   time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at" json:"updated_at"`
 }
 
-type TaskUpdate struct {
+type MemoUpdate struct {
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Score       *int    `json:"score"`
 }
