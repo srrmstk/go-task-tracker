@@ -16,9 +16,9 @@ func NewMemoController(s *service.MemoService) *memoController {
 }
 
 func (c *memoController) Register(mux *http.ServeMux, log *slog.Logger) {
-	mux.HandleFunc("GET /tasks", logger.LoggerMiddleware(log, GetMemosHandler(log, c.s)))
-	mux.HandleFunc("GET /tasks/{id}", logger.LoggerMiddleware(log, GetOneMemoHandler(log, c.s)))
-	mux.HandleFunc("POST /tasks", logger.LoggerMiddleware(log, CreateMemoHandler(log, c.s)))
-	mux.HandleFunc("PUT /tasks/{id}", logger.LoggerMiddleware(log, UpdateMemoHandler(log, c.s)))
-	mux.HandleFunc("DELETE /tasks/{id}", logger.LoggerMiddleware(log, DeleteMemoHandler(log, c.s)))
+	mux.HandleFunc("GET /memos/", logger.LoggerMiddleware(log, GetMemosHandler(log, c.s)))
+	mux.HandleFunc("GET /memos/{id}", logger.LoggerMiddleware(log, GetOneMemoHandler(log, c.s)))
+	mux.HandleFunc("POST /memos/", logger.LoggerMiddleware(log, CreateMemoHandler(log, c.s)))
+	mux.HandleFunc("PUT /memos/{id}", logger.LoggerMiddleware(log, UpdateMemoHandler(log, c.s)))
+	mux.HandleFunc("DELETE /memos/{id}", logger.LoggerMiddleware(log, DeleteMemoHandler(log, c.s)))
 }
