@@ -6,6 +6,8 @@ import (
 	"go-task-tracker/internal/model"
 	"log/slog"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type memoCreator interface {
@@ -17,9 +19,13 @@ func CreateMemoHandler(log *slog.Logger, mc memoCreator) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		var m model.Memo
-		log.Debug("GetMemoHandler", "body", m)
-
 		if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		validate := validator.New(validator.WithRequiredStructEnabled())
+		if err := validate.Struct(m); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

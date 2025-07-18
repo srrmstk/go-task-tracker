@@ -31,9 +31,6 @@ func (s *MemoService) Create(ctx context.Context, m *model.Memo) error {
 }
 
 func (s *MemoService) Update(ctx context.Context, id int64, m *model.MemoUpdate) error {
-	if m.Title == nil && m.Description == nil {
-		return errors.New("nothing to update")
-	}
 	return s.repo.Update(ctx, id, m)
 }
 

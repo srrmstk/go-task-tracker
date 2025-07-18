@@ -9,6 +9,8 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type memoUpdater interface {
@@ -29,6 +31,12 @@ func UpdateMemoHandler(log *slog.Logger, mu memoUpdater) http.HandlerFunc {
 		var m model.MemoUpdate
 		if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
 			http.Error(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		validate := validator.New(validator.WithRequiredStructEnabled())
+		if err := validate.Struct(m); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 

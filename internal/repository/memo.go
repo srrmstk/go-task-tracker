@@ -40,7 +40,7 @@ func (r *repository) GetByID(ctx context.Context, id int64) (model.Memo, error) 
 }
 
 func (r *repository) Create(ctx context.Context, memo *model.Memo) error {
-	query := "INSERT INTO memos (title, description, score) VALUES ($1, $2) returning id, created_at, updated_at"
+	query := "INSERT INTO memos (title, description, score) VALUES ($1, $2, $3) returning id, created_at, updated_at"
 
 	return r.db.
 		QueryRowContext(ctx, query, memo.Title, memo.Description, memo.Score).
@@ -53,7 +53,7 @@ func (r *repository) Update(ctx context.Context, id int64, memo *model.MemoUpdat
 			SET 
 				title = COALESCE($2, title), 
 				description = COALESCE($3, description), 
-				score = COALESCE($4, score)
+				score = COALESCE($4, score),
 				updated_at = NOW() 
 			WHERE id = $1`
 	res, err := r.db.ExecContext(ctx, query, id, memo.Title, memo.Description, memo.Score)
