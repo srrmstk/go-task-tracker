@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"go-task-tracker/internal/model"
 	"go-task-tracker/internal/repository"
 )
@@ -24,9 +23,6 @@ func (s *MemoService) GetByID(ctx context.Context, id int64) (model.Memo, error)
 }
 
 func (s *MemoService) Create(ctx context.Context, m *model.Memo) error {
-	if m.Title == "" {
-		return errors.New("title is required")
-	}
 	return s.repo.Create(ctx, m)
 }
 

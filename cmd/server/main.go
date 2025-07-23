@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"go-task-tracker/internal/http-server/handlers/category"
 	"go-task-tracker/internal/http-server/handlers/memo"
 	"go-task-tracker/internal/repository"
 	"go-task-tracker/internal/service"
@@ -50,8 +51,13 @@ func initHttpServer(log *slog.Logger, db *sqlx.DB) *http.Server {
 	memoService := service.NewMemoService(memoRepo)
 	memoController := memo.NewMemoController(memoService)
 
+	categoryRepo := repository.NewCategoryRepository(db)
+	categoryService := service.NewCategoryService(categoryRepo)
+	categoryController := category.NewCategoryController(categoryService)
+
 	mux := http.NewServeMux()
 	memoController.Register(mux, log)
+	categoryController.Register(mux, log)
 
 	httpServer := &http.Server{
 		ReadTimeout: readTimeout * time.Second,
