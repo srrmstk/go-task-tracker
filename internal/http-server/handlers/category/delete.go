@@ -1,4 +1,4 @@
-package memo
+package category
 
 import (
 	"context"
@@ -9,31 +9,31 @@ import (
 	"strconv"
 )
 
-type memoDelete interface {
+type categoryDelete interface {
 	Delete(ctx context.Context, id int64) error
 }
 
-func DeleteMemoHandler(log *slog.Logger, md memoDelete) http.HandlerFunc {
+func DeleteCategoryHandler(log *slog.Logger, cd categoryDelete) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-type", "application/json")
+		w.Header().Set("Content-Type", "application/json")
 
 		idStr := r.PathValue("id")
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			http.Error(w, "Invalid id", http.StatusBadRequest)
+			http.Error(w, "invalid id", http.StatusBadRequest)
 			return
 		}
 
-		err = md.Delete(r.Context(), id)
+		err = cd.Delete(r.Context(), id)
 
 		switch {
 		case err == nil:
 			w.WriteHeader(http.StatusNoContent)
 		case errors.Is(err, sql.ErrNoRows):
-			http.Error(w, "Memo not found", http.StatusNotFound)
+			http.Error(w, "category not found", http.StatusNotFound)
 		default:
 			log.Debug(err.Error())
-			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			http.Error(w, "failed to delete", http.StatusInternalServerError)
 		}
 	}
 }
