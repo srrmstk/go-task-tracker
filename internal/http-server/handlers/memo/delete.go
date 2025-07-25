@@ -11,15 +11,15 @@ import (
 )
 
 type memoDelete interface {
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 func DeleteMemoHandler(log *slog.Logger, md memoDelete) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 
-		id := r.PathValue("id")
-		_, err := uuid.Parse(id)
+		idStr := r.PathValue("id")
+		id, err := uuid.Parse(idStr)
 		if err != nil {
 			http.Error(w, "invalid UUID format", http.StatusBadRequest)
 			return

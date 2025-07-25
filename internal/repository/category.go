@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"go-task-tracker/internal/model"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -14,10 +15,10 @@ type categoryRepository struct {
 
 type CategoryRepository interface {
 	GetAll(ctx context.Context) ([]model.Category, error)
-	GetByID(ctx context.Context, id string) (model.Category, error)
+	GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 	Create(ctx context.Context, category *model.Category) error
 	Update(ctx context.Context, category *model.Category) error
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 func NewCategoryRepository(db *sqlx.DB) CategoryRepository {
@@ -31,7 +32,7 @@ func (r *categoryRepository) GetAll(ctx context.Context) ([]model.Category, erro
 	return res, err
 }
 
-func (r *categoryRepository) GetByID(ctx context.Context, id string) (model.Category, error) {
+func (r *categoryRepository) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error) {
 	var res model.Category
 	query := "SELECT * FROM categories WHERE id = $1"
 	err := r.db.GetContext(ctx, &res, query, id)
@@ -68,7 +69,7 @@ func (r *categoryRepository) Update(ctx context.Context, category *model.Categor
 
 }
 
-func (r *categoryRepository) Delete(ctx context.Context, id string) error {
+func (r *categoryRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	query := "DELETE FROM categories WHERE id = $1"
 	res, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {

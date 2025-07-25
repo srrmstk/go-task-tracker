@@ -25,7 +25,7 @@ func (s *CategoryService) GetAll(ctx context.Context) ([]model.Category, error) 
 	return res, err
 }
 
-func (s *CategoryService) GetByID(ctx context.Context, id string) (model.Category, error) {
+func (s *CategoryService) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
@@ -47,7 +47,7 @@ func (s *CategoryService) Create(ctx context.Context, dto model.CategoryCreateDT
 	return model, nil
 }
 
-func (s *CategoryService) Update(ctx context.Context, id string, c *model.CategoryUpdateDTO) error {
+func (s *CategoryService) Update(ctx context.Context, id uuid.UUID, c *model.CategoryUpdateDTO) error {
 	category, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -59,6 +59,6 @@ func (s *CategoryService) Update(ctx context.Context, id string, c *model.Catego
 	return s.repo.Update(ctx, &category)
 }
 
-func (s *CategoryService) Delete(ctx context.Context, id string) error {
+func (s *CategoryService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Delete(ctx, id)
 }

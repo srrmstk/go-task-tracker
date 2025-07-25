@@ -10,38 +10,45 @@ import (
 )
 
 type MemoService struct {
-	repo repository.MemoRepository
+	memoRepo repository.MemoRepository
+	cateRepo repository.CategoryRepository
 }
 
-func NewMemoService(r repository.MemoRepository) *MemoService {
-	return &MemoService{repo: r}
+func NewMemoService(mr repository.MemoRepository, cr repository.CategoryRepository) *MemoService {
+	return &MemoService{memoRepo: mr, cateRepo: cr}
 }
 
 func (s *MemoService) GetAll(ctx context.Context) ([]model.Memo, error) {
-	res, err := s.repo.GetAll(ctx)
+	res, err := s.memoRepo.GetAll(ctx)
 	if res == nil && err == nil {
 		return []model.Memo{}, nil
 	}
 	return res, err
 }
 
-func (s *MemoService) GetByID(ctx context.Context, id string) (model.Memo, error) {
-	return s.repo.GetByID(ctx, id)
+func (s *MemoService) GetByID(ctx context.Context, id uuid.UUID) (model.Memo, error) {
+	return s.memoRepo.GetByID(ctx, id)
 }
 
 func (s *MemoService) Create(ctx context.Context, dto model.MemoCreateDTO) (*model.Memo, error) {
 	now := time.Now()
+
+	_, err := s.cateRepo.GetByID(ctx, dto.CategoryID)
+	if err != nil {
+		return nil, err
+	}
 
 	m := &model.Memo{
 		ID:          uuid.New(),
 		Title:       dto.Title,
 		Description: dto.Description,
 		Score:       dto.Score,
+		CategoryID:  dto.CategoryID,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
 
-	if err := s.repo.Create(ctx, m); err != nil {
+	if err := s.memoRepo.Create(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -49,10 +56,18 @@ func (s *MemoService) Create(ctx context.Context, dto model.MemoCreateDTO) (*mod
 
 }
 
-func (s *MemoService) Update(ctx context.Context, id string, dto *model.MemoUpdateDTO) error {
-	memo, err := s.repo.GetByID(ctx, id)
+func (s *MemoService) Update(ctx context.Context, id uuid.UUID, dto *model.MemoUpdateDTO) error {
+	memo, err := s.memoRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
+	}
+
+	if dto.CategoryID != nil {
+		_, err := s.cateRepo.GetByID(ctx, *dto.CategoryID)
+		if err != nil {
+			return err
+		}
+		memo.CategoryID = *dto.CategoryID
 	}
 
 	if dto.Title != nil {
@@ -67,9 +82,9 @@ func (s *MemoService) Update(ctx context.Context, id string, dto *model.MemoUpda
 
 	memo.UpdatedAt = time.Now().UTC()
 
-	return s.repo.Update(ctx, &memo)
+	return s.memoRepo.Update(ctx, &memo)
 }
 
-func (s *MemoService) Delete(ctx context.Context, id string) error {
-	return s.repo.Delete(ctx, id)
+func (s *MemoService) Delete(ctx context.Context, id uuid.UUID) error {
+	return s.memoRepo.Delete(ctx, id)
 }

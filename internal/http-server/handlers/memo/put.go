@@ -14,15 +14,15 @@ import (
 )
 
 type memoUpdater interface {
-	Update(ctx context.Context, id string, m *model.MemoUpdateDTO) error
+	Update(ctx context.Context, id uuid.UUID, m *model.MemoUpdateDTO) error
 }
 
 func UpdateMemoHandler(log *slog.Logger, mu memoUpdater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		id := r.PathValue("id")
-		_, err := uuid.Parse(id)
+		idStr := r.PathValue("id")
+		id, err := uuid.Parse(idStr)
 		if err != nil {
 			http.Error(w, "invalid UUID format", http.StatusBadRequest)
 			return
