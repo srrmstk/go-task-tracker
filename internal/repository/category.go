@@ -27,14 +27,14 @@ func NewCategoryRepository(db *sqlx.DB) CategoryRepository {
 func (r *categoryRepository) GetAll(ctx context.Context) ([]model.Category, error) {
 	var res []model.Category
 	query := "SELECT * FROM categories"
-	err := r.db.SelectContext(ctx, res, query)
+	err := r.db.SelectContext(ctx, &res, query)
 	return res, err
 }
 
 func (r *categoryRepository) GetByID(ctx context.Context, id int64) (model.Category, error) {
 	var res model.Category
 	query := "SELECT * FROM categories WHERE id = $1"
-	err := r.db.SelectContext(ctx, res, query, id)
+	err := r.db.GetContext(ctx, &res, query, id)
 	return res, err
 }
 
@@ -66,7 +66,7 @@ func (r *categoryRepository) Update(ctx context.Context, id int64, category *mod
 
 func (r *categoryRepository) Delete(ctx context.Context, id int64) error {
 	query := "DELETE FROM categories WHERE id = $1"
-	res, err := r.db.ExecContext(ctx, query)
+	res, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}

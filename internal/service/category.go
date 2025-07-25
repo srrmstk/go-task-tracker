@@ -15,7 +15,11 @@ func NewCategoryService(repo repository.CategoryRepository) *CategoryService {
 }
 
 func (s *CategoryService) GetAll(ctx context.Context) ([]model.Category, error) {
-	return s.repo.GetAll(ctx)
+	res, err := s.repo.GetAll(ctx)
+	if res == nil && err == nil {
+		return []model.Category{}, nil
+	}
+	return res, err
 }
 
 func (s *CategoryService) GetByID(ctx context.Context, id int64) (model.Category, error) {

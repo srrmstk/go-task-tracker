@@ -15,7 +15,11 @@ func NewMemoService(r repository.MemoRepository) *MemoService {
 }
 
 func (s *MemoService) GetAll(ctx context.Context) ([]model.Memo, error) {
-	return s.repo.GetAll(ctx)
+	res, err := s.repo.GetAll(ctx)
+	if res == nil && err == nil {
+		return []model.Memo{}, nil
+	}
+	return res, err
 }
 
 func (s *MemoService) GetByID(ctx context.Context, id int64) (model.Memo, error) {
