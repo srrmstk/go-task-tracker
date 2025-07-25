@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"go-task-tracker/internal/http-server/helpers"
 	"go-task-tracker/internal/model"
-	"log/slog"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -16,14 +17,12 @@ type categoryProvider interface {
 	GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 }
 
-func GetCategoryHandler(log *slog.Logger, cp categoryProvider) http.HandlerFunc {
+func GetCategoryHandler(cp categoryProvider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
-		idStr := r.PathValue("id")
+		idStr := chi.URLParam(r, "id")
 		id, err := uuid.Parse(idStr)
 		if err != nil {
-			http.Error(w, "invalid UUID format", http.StatusBadRequest)
+			helpers.JsonError(w, "invalid UUID format", http.StatusBadRequest)
 			return
 		}
 
@@ -32,10 +31,9 @@ func GetCategoryHandler(log *slog.Logger, cp categoryProvider) http.HandlerFunc 
 		case err == nil:
 			json.NewEncoder(w).Encode(res)
 		case errors.Is(err, sql.ErrNoRows):
-			http.Error(w, "category not found", http.StatusNotFound)
+			helpers.JsonError(w, "category not found", http.StatusNotFound)
 		default:
-			log.Debug(err.Error())
-			http.Error(w, "something went wrong", http.StatusInternalServerError)
+			helpers.JsonError(w, "something went wrong", http.StatusInternalServerError)
 		}
 	}
 }

@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log/slog"
+	"go-task-tracker/internal/http-server/helpers"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -14,14 +15,12 @@ type memoDelete interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
-func DeleteMemoHandler(log *slog.Logger, md memoDelete) http.HandlerFunc {
+func DeleteMemoHandler(md memoDelete) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-type", "application/json")
-
-		idStr := r.PathValue("id")
+		idStr := chi.URLParam(r, "id")
 		id, err := uuid.Parse(idStr)
 		if err != nil {
-			http.Error(w, "invalid UUID format", http.StatusBadRequest)
+			helpers.JsonError(w, "invalid UUID format", http.StatusBadRequest)
 			return
 		}
 
@@ -31,10 +30,9 @@ func DeleteMemoHandler(log *slog.Logger, md memoDelete) http.HandlerFunc {
 		case err == nil:
 			w.WriteHeader(http.StatusNoContent)
 		case errors.Is(err, sql.ErrNoRows):
-			http.Error(w, "Memo not found", http.StatusNotFound)
+			helpers.JsonError(w, "Memo not found", http.StatusNotFound)
 		default:
-			log.Debug(err.Error())
-			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			helpers.JsonError(w, "Something went wrong", http.StatusInternalServerError)
 		}
 	}
 }

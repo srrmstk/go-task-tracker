@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"errors"
+	"go-task-tracker/internal/http-server/handlers/auth"
 	"go-task-tracker/internal/http-server/handlers/category"
 	"go-task-tracker/internal/http-server/handlers/memo"
+	jsonformatter "go-task-tracker/internal/http-server/middleware/json-formatter"
 	"go-task-tracker/internal/repository"
 	"go-task-tracker/internal/service"
 	"go-task-tracker/pkg/storage"
@@ -15,6 +17,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 )
@@ -44,26 +48,34 @@ func main() {
 
 func initHttpServer(log *slog.Logger, db *sqlx.DB) *http.Server {
 	const serverAddress = ":8080"
-	const readTimeout = 60
-	const idleTimeout = 5
+	const readTimeout = 60 * time.Second
+	const idleTimeout = 5 * time.Second
 
-	memoRepo := repository.NewMemoRepository(db)
-	memoService := service.NewMemoService(memoRepo)
-	memoController := memo.NewMemoController(memoService)
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(jsonformatter.JsonMiddleware)
 
 	categoryRepo := repository.NewCategoryRepository(db)
 	categoryService := service.NewCategoryService(categoryRepo)
 	categoryController := category.NewCategoryController(categoryService)
 
-	mux := http.NewServeMux()
-	memoController.Register(mux, log)
-	categoryController.Register(mux, log)
+	memoRepo := repository.NewMemoRepository(db)
+	memoService := service.NewMemoService(memoRepo, categoryRepo)
+	memoController := memo.NewMemoController(memoService)
+
+	authRepo := repository.NewAuthRepository(db)
+	authService := service.NewAuthService(authRepo)
+	authController := auth.NewAuthController(authService)
+
+	memoController.Register(r)
+	categoryController.Register(r)
+	authController.Register(r)
 
 	httpServer := &http.Server{
-		ReadTimeout: readTimeout * time.Second,
-		IdleTimeout: idleTimeout * time.Second,
+		ReadTimeout: readTimeout,
+		IdleTimeout: idleTimeout,
 		Addr:        serverAddress,
-		Handler:     mux,
+		Handler:     r,
 	}
 
 	go func() {
