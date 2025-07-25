@@ -6,24 +6,24 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type categoryDelete interface {
-	Delete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id string) error
 }
 
 func DeleteCategoryHandler(log *slog.Logger, cd categoryDelete) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		idStr := r.PathValue("id")
-		id, err := strconv.ParseInt(idStr, 10, 64)
+		id := r.PathValue("id")
+		_, err := uuid.Parse(id)
 		if err != nil {
-			http.Error(w, "invalid id", http.StatusBadRequest)
+			http.Error(w, "invalid UUID format", http.StatusBadRequest)
 			return
 		}
-
 		err = cd.Delete(r.Context(), id)
 
 		switch {

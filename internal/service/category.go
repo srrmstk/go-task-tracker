@@ -4,6 +4,9 @@ import (
 	"context"
 	"go-task-tracker/internal/model"
 	"go-task-tracker/internal/repository"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type CategoryService struct {
@@ -22,18 +25,40 @@ func (s *CategoryService) GetAll(ctx context.Context) ([]model.Category, error) 
 	return res, err
 }
 
-func (s *CategoryService) GetByID(ctx context.Context, id int64) (model.Category, error) {
+func (s *CategoryService) GetByID(ctx context.Context, id string) (model.Category, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *CategoryService) Create(ctx context.Context, c *model.Category) error {
-	return s.repo.Create(ctx, c)
+func (s *CategoryService) Create(ctx context.Context, dto model.CategoryCreateDTO) (*model.Category, error) {
+	now := time.Now().UTC()
+
+	model := &model.Category{
+		ID:        uuid.New(),
+		Title:     dto.Title,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	err := s.repo.Create(ctx, model)
+	if err != nil {
+		return nil, err
+	}
+
+	return model, nil
 }
 
-func (s *CategoryService) Update(ctx context.Context, id int64, c *model.CategoryUpdate) error {
-	return s.repo.Update(ctx, id, c)
+func (s *CategoryService) Update(ctx context.Context, id string, c *model.CategoryUpdateDTO) error {
+	category, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	category.Title = c.Title
+	category.UpdatedAt = time.Now().UTC()
+
+	return s.repo.Update(ctx, &category)
 }
 
-func (s *CategoryService) Delete(ctx context.Context, id int64) error {
+func (s *CategoryService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }

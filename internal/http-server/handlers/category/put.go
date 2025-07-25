@@ -8,25 +8,26 @@ import (
 	"go-task-tracker/internal/model"
 	"log/slog"
 	"net/http"
-	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type categoryUpdater interface {
-	Update(ctx context.Context, id int64, c *model.CategoryUpdate) error
+	Update(ctx context.Context, id string, c *model.CategoryUpdateDTO) error
 }
 
 func UpdateCategoryHandler(log *slog.Logger, cu categoryUpdater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		idStr := r.PathValue("id")
-		id, err := strconv.ParseInt(idStr, 10, 64)
+		id := r.PathValue("id")
+		_, err := uuid.Parse(id)
 		if err != nil {
-			http.Error(w, "invalid id", http.StatusBadRequest)
+			http.Error(w, "invalid UUID format", http.StatusBadRequest)
 			return
 		}
 
-		var c model.CategoryUpdate
+		var c model.CategoryUpdateDTO
 		if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

@@ -8,27 +8,27 @@ import (
 	"go-task-tracker/internal/model"
 	"log/slog"
 	"net/http"
-	"strconv"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type memoUpdater interface {
-	Update(ctx context.Context, id int64, m *model.MemoUpdate) error
+	Update(ctx context.Context, id string, m *model.MemoUpdateDTO) error
 }
 
 func UpdateMemoHandler(log *slog.Logger, mu memoUpdater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		idStr := r.PathValue("id")
-		id, err := strconv.ParseInt(idStr, 10, 64)
+		id := r.PathValue("id")
+		_, err := uuid.Parse(id)
 		if err != nil {
-			http.Error(w, "invalid Id", http.StatusBadRequest)
+			http.Error(w, "invalid UUID format", http.StatusBadRequest)
 			return
 		}
 
-		var m model.MemoUpdate
+		var m model.MemoUpdateDTO
 		if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
 			http.Error(w, "invalid request body", http.StatusBadRequest)
 			return

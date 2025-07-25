@@ -4,6 +4,9 @@ import (
 	"context"
 	"go-task-tracker/internal/model"
 	"go-task-tracker/internal/repository"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type MemoService struct {
@@ -22,18 +25,51 @@ func (s *MemoService) GetAll(ctx context.Context) ([]model.Memo, error) {
 	return res, err
 }
 
-func (s *MemoService) GetByID(ctx context.Context, id int64) (model.Memo, error) {
+func (s *MemoService) GetByID(ctx context.Context, id string) (model.Memo, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *MemoService) Create(ctx context.Context, m *model.Memo) error {
-	return s.repo.Create(ctx, m)
+func (s *MemoService) Create(ctx context.Context, dto model.MemoCreateDTO) (*model.Memo, error) {
+	now := time.Now()
+
+	m := &model.Memo{
+		ID:          uuid.New(),
+		Title:       dto.Title,
+		Description: dto.Description,
+		Score:       dto.Score,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+
+	if err := s.repo.Create(ctx, m); err != nil {
+		return nil, err
+	}
+
+	return m, nil
+
 }
 
-func (s *MemoService) Update(ctx context.Context, id int64, m *model.MemoUpdate) error {
-	return s.repo.Update(ctx, id, m)
+func (s *MemoService) Update(ctx context.Context, id string, dto *model.MemoUpdateDTO) error {
+	memo, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if dto.Title != nil {
+		memo.Title = *dto.Title
+	}
+	if dto.Description != nil {
+		memo.Description = *dto.Description
+	}
+	if dto.Score != nil {
+		memo.Score = *dto.Score
+	}
+
+	memo.UpdatedAt = time.Now().UTC()
+
+	return s.repo.Update(ctx, &memo)
 }
 
-func (s *MemoService) Delete(ctx context.Context, id int64) error {
+func (s *MemoService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }

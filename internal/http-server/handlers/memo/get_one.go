@@ -8,21 +8,22 @@ import (
 	"go-task-tracker/internal/model"
 	"log/slog"
 	"net/http"
-	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type memoProvider interface {
-	GetByID(ctx context.Context, id int64) (model.Memo, error)
+	GetByID(ctx context.Context, id string) (model.Memo, error)
 }
 
 func GetOneMemoHandler(log *slog.Logger, mp memoProvider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		strID := r.PathValue("id")
-		id, err := strconv.ParseInt(strID, 10, 64)
+		id := r.PathValue("id")
+		_, err := uuid.Parse(id)
 		if err != nil {
-			http.Error(w, "invalid ID", http.StatusBadRequest)
+			http.Error(w, "invalid UUID format", http.StatusBadRequest)
 			return
 		}
 

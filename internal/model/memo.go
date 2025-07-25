@@ -1,17 +1,27 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Memo struct {
-	ID          int64     `db:"id" json:"id"`
-	Title       string    `db:"title" json:"title" validate:"required"`
+	ID          uuid.UUID `db:"id" json:"id"`
+	Title       string    `db:"title" json:"title"`
 	Description string    `db:"description" json:"description"`
-	Score       int       `db:"score" json:"score" validate:"required,gte=1,lte=10"`
+	Score       int       `db:"score" json:"score"`
 	CreatedAt   time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at" json:"updated_at"`
 }
 
-type MemoUpdate struct {
+type MemoCreateDTO struct {
+	Title       string `json:"title" validate:"required"`
+	Description string `json:"description"`
+	Score       int    `json:"score" validate:"required,gte=1,lte=10"`
+}
+
+type MemoUpdateDTO struct {
 	Title       *string `json:"title,omitempty" validate:"omitempty,min=1"`
 	Description *string `json:"description,omitempty" validate:"omitempty"`
 	Score       *int    `json:"score" validate:"omitempty,gte=1,lte=10"`

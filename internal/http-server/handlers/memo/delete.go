@@ -6,21 +6,22 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type memoDelete interface {
-	Delete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id string) error
 }
 
 func DeleteMemoHandler(log *slog.Logger, md memoDelete) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 
-		idStr := r.PathValue("id")
-		id, err := strconv.ParseInt(idStr, 10, 64)
+		id := r.PathValue("id")
+		_, err := uuid.Parse(id)
 		if err != nil {
-			http.Error(w, "Invalid id", http.StatusBadRequest)
+			http.Error(w, "invalid UUID format", http.StatusBadRequest)
 			return
 		}
 
