@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"go-task-tracker/internal/http-server/helpers"
+	"go-task-tracker/internal/helpers"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"

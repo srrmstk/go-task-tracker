@@ -31,7 +31,7 @@ func (s *MemoService) GetByID(ctx context.Context, id uuid.UUID) (model.Memo, er
 }
 
 func (s *MemoService) Create(ctx context.Context, dto model.MemoCreateDTO) (*model.Memo, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	_, err := s.cateRepo.GetByID(ctx, dto.CategoryID)
 	if err != nil {

@@ -1,4 +1,4 @@
-package memo
+package auth
 
 import (
 	"context"
@@ -10,13 +10,13 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type memoCreator interface {
-	Create(ctx context.Context, m model.MemoCreateDTO) (*model.Memo, error)
+type register interface {
+	Register(ctx context.Context, dto model.UserAuthDTO) error
 }
 
-func CreateMemoHandler(mc memoCreator) http.HandlerFunc {
+func RegisterHandler(reg register) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var dto model.MemoCreateDTO
+		var dto model.UserAuthDTO
 		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 			helpers.JsonError(w, err.Error(), http.StatusBadRequest)
 			return
@@ -28,13 +28,11 @@ func CreateMemoHandler(mc memoCreator) http.HandlerFunc {
 			return
 		}
 
-		res, err := mc.Create(r.Context(), dto)
-		if err != nil {
-			helpers.JsonError(w, err.Error(), http.StatusUnprocessableEntity)
+		if err := reg.Register(r.Context(), dto); err != nil {
+			helpers.JsonError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(res)
 	}
 }

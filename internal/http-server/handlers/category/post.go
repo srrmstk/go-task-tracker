@@ -3,7 +3,7 @@ package category
 import (
 	"context"
 	"encoding/json"
-	"go-task-tracker/internal/http-server/helpers"
+	"go-task-tracker/internal/helpers"
 	"go-task-tracker/internal/model"
 	"net/http"
 

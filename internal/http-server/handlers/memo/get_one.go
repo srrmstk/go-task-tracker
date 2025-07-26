@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"go-task-tracker/internal/http-server/helpers"
+	"go-task-tracker/internal/helpers"
 	"go-task-tracker/internal/model"
 	"net/http"
 

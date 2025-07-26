@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"go-task-tracker/internal/helpers"
 	"go-task-tracker/internal/http-server/handlers/auth"
 	"go-task-tracker/internal/http-server/handlers/category"
 	"go-task-tracker/internal/http-server/handlers/memo"
@@ -29,6 +30,7 @@ func main() {
 	)
 	log.Info("Starting the application")
 	log.Debug("Debugging is enabled")
+	slog.SetDefault(log)
 
 	godotenv.Load()
 	postgresDsn := os.Getenv("POSTGRES_DSN")
@@ -40,13 +42,13 @@ func main() {
 	}
 	defer db.Close()
 
-	httpServer := initHttpServer(log, db)
+	httpServer := initHttpServer(db)
 	ctx := context.Background()
 
-	gracefulShutdown(ctx, log, httpServer)
+	gracefulShutdown(ctx, httpServer)
 }
 
-func initHttpServer(log *slog.Logger, db *sqlx.DB) *http.Server {
+func initHttpServer(db *sqlx.DB) *http.Server {
 	const serverAddress = ":8080"
 	const readTimeout = 60 * time.Second
 	const idleTimeout = 5 * time.Second
@@ -54,6 +56,12 @@ func initHttpServer(log *slog.Logger, db *sqlx.DB) *http.Server {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(jsonformatter.JsonMiddleware)
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		helpers.JsonError(w, "Not found", http.StatusNotFound)
+	})
+	r.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
+		helpers.JsonError(w, "Method not allowed", http.StatusMethodNotAllowed)
+	})
 
 	categoryRepo := repository.NewCategoryRepository(db)
 	categoryService := service.NewCategoryService(categoryRepo)
@@ -79,9 +87,9 @@ func initHttpServer(log *slog.Logger, db *sqlx.DB) *http.Server {
 	}
 
 	go func() {
-		log.Info("Starting HTTP server", "address", serverAddress)
+		slog.Info("Starting HTTP server", "address", serverAddress)
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Error(err.Error())
+			slog.Error(err.Error())
 			os.Exit(1)
 		}
 	}()
@@ -89,11 +97,14 @@ func initHttpServer(log *slog.Logger, db *sqlx.DB) *http.Server {
 	return httpServer
 }
 
-func gracefulShutdown(ctx context.Context, log *slog.Logger, server *http.Server) {
+func gracefulShutdown(ctx context.Context, server *http.Server) {
 	exit := make(chan os.Signal, 1)
 	signal.Notify(exit, syscall.SIGINT, syscall.SIGTERM)
 	<-exit
 
-	log.Info("Gracefully shutting down")
+	slog.Info("Gracefully shutting down")
 	server.Shutdown(ctx)
 }
+
+// TODO: add auth (since we have frontend)
+// TODO: add tests
