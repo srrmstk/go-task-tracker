@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"go-task-tracker/internal/helpers"
-	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -31,7 +30,6 @@ func JwtGuard(next http.Handler) http.Handler {
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
 		if err != nil {
-			slog.Debug(err.Error())
 			helpers.JsonError(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -40,7 +38,6 @@ func JwtGuard(next http.Handler) http.Handler {
 			if claims.ExpiresAt == nil || claims.ExpiresAt.Time.Before(time.Now()) {
 				helpers.JsonError(w, "token sexpired", http.StatusUnauthorized)
 				return
-
 			}
 			ctx := context.WithValue(r.Context(), "user_id", claims.UserID)
 			r = r.WithContext(ctx)
