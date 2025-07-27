@@ -1,4 +1,4 @@
-package jsonformatter
+package middleware
 
 import "net/http"
 

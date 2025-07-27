@@ -1,6 +1,7 @@
 package category
 
 import (
+	"go-task-tracker/internal/http-server/middleware"
 	"go-task-tracker/internal/service"
 
 	"github.com/go-chi/chi/v5"
@@ -16,6 +17,7 @@ func NewCategoryController(s *service.CategoryService) *categoryController {
 
 func (c *categoryController) Register(r chi.Router) {
 	r.Route("/categories", func(r chi.Router) {
+		r.Use(middleware.JwtGuard)
 		r.Get("/", GetCategoriesHandler(c.s))
 		r.Get("/{id}", GetCategoryHandler(c.s))
 		r.Post("/", CreateCategoryHandler(c.s))

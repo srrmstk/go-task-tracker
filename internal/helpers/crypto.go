@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"log/slog"
 	"os"
 	"time"
 
@@ -22,7 +21,7 @@ func CheckPasswordHash(password, hash string) bool {
 
 func GenerateJWT(id uuid.UUID) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
-	slog.Debug(secret)
+
 	var (
 		key []byte
 		t   *jwt.Token

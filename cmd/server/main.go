@@ -7,7 +7,7 @@ import (
 	"go-task-tracker/internal/http-server/handlers/auth"
 	"go-task-tracker/internal/http-server/handlers/category"
 	"go-task-tracker/internal/http-server/handlers/memo"
-	jsonformatter "go-task-tracker/internal/http-server/middleware/json-formatter"
+	"go-task-tracker/internal/http-server/middleware"
 	"go-task-tracker/internal/repository"
 	"go-task-tracker/internal/service"
 	"go-task-tracker/pkg/storage"
@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 )
@@ -54,8 +54,8 @@ func initHttpServer(db *sqlx.DB) *http.Server {
 	const idleTimeout = 5 * time.Second
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(jsonformatter.JsonMiddleware)
+	r.Use(chiMiddleware.Logger)
+	r.Use(middleware.JsonMiddleware)
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		helpers.JsonError(w, "Not found", http.StatusNotFound)
 	})
@@ -105,6 +105,3 @@ func gracefulShutdown(ctx context.Context, server *http.Server) {
 	slog.Info("Gracefully shutting down")
 	server.Shutdown(ctx)
 }
-
-// TODO: add auth (since we have frontend)
-// TODO: add tests
