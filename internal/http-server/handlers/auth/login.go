@@ -11,12 +11,12 @@ import (
 )
 
 type login interface {
-	Login(ctx context.Context, dto model.UserAuthDTO) (string, error)
+	Login(ctx context.Context, dto model.UserLoginDTO) (string, error)
 }
 
 func LoginHandler(l login) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var dto model.UserAuthDTO
+		var dto model.UserLoginDTO
 		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 			helpers.JsonError(w, err.Error(), http.StatusBadRequest)
 			return

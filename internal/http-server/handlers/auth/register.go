@@ -11,12 +11,12 @@ import (
 )
 
 type register interface {
-	Register(ctx context.Context, dto model.UserAuthDTO) error
+	Register(ctx context.Context, dto model.UserRegisterDTO) error
 }
 
 func RegisterHandler(reg register) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var dto model.UserAuthDTO
+		var dto model.UserRegisterDTO
 		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 			helpers.JsonError(w, err.Error(), http.StatusBadRequest)
 			return

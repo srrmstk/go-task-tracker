@@ -14,7 +14,7 @@ type authRepository struct {
 
 type AuthRepository interface {
 	Register(ctx context.Context, user *model.User) error
-	GetUserByUsername(ctx context.Context, username string) (model.User, error)
+	GetUserByEmail(ctx context.Context, email string) (model.User, error)
 }
 
 func NewAuthRepository(db *sqlx.DB) AuthRepository {
@@ -22,10 +22,10 @@ func NewAuthRepository(db *sqlx.DB) AuthRepository {
 }
 
 func (r *authRepository) Register(ctx context.Context, user *model.User) error {
-	query := `INSERT INTO users (id, username, password, created_at, updated_at)
-				VALUES ($1, $2, $3, $4, $5)`
+	query := `INSERT INTO users (id, username, password, email, created_at, updated_at)
+				VALUES ($1, $2, $3, $4, $5, $6)`
 
-	res, err := r.db.ExecContext(ctx, query, user.ID, user.Username, user.Password, user.CreatedAt, user.UpdatedAt)
+	res, err := r.db.ExecContext(ctx, query, user.ID, user.Username, user.Password, user.Email, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -37,9 +37,9 @@ func (r *authRepository) Register(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (r *authRepository) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
+func (r *authRepository) GetUserByEmail(ctx context.Context, email string) (model.User, error) {
 	var user model.User
-	query := "SELECT * FROM users WHERE username = $1"
-	err := r.db.GetContext(ctx, &user, query, username)
+	query := "SELECT * FROM users WHERE email = $1"
+	err := r.db.GetContext(ctx, &user, query, email)
 	return user, err
 }
