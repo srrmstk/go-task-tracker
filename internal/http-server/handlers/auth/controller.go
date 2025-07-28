@@ -18,5 +18,6 @@ func (c *authController) Register(r chi.Router) {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", RegisterHandler(c.s))
 		r.Post("/login", LoginHandler(c.s))
+		r.Post("/verify/{id}", VerifyHandler(c.s))
 	})
 }

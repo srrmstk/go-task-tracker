@@ -66,7 +66,6 @@ func (r *categoryRepository) Update(ctx context.Context, category *model.Categor
 	}
 
 	return nil
-
 }
 
 func (r *categoryRepository) Delete(ctx context.Context, id uuid.UUID) error {

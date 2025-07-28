@@ -22,6 +22,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -34,6 +35,7 @@ func main() {
 
 	godotenv.Load()
 	postgresDsn := os.Getenv("POSTGRES_DSN")
+	redisDsn := os.Getenv("REDIS_DSN")
 
 	db, err := storage.NewPostgres(postgresDsn)
 	if err != nil {
@@ -42,13 +44,20 @@ func main() {
 	}
 	defer db.Close()
 
-	httpServer := initHttpServer(db)
+	rdb, err := storage.NewRedis(redisDsn)
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(1)
+	}
+	defer rdb.Close()
+
+	httpServer := initHttpServer(db, rdb)
 	ctx := context.Background()
 
 	gracefulShutdown(ctx, httpServer)
 }
 
-func initHttpServer(db *sqlx.DB) *http.Server {
+func initHttpServer(db *sqlx.DB, rdb *redis.Client) *http.Server {
 	const serverAddress = ":8080"
 	const readTimeout = 60 * time.Second
 	const idleTimeout = 5 * time.Second
@@ -63,6 +72,8 @@ func initHttpServer(db *sqlx.DB) *http.Server {
 		helpers.JsonError(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
+	emailService := service.NewEmailService()
+
 	categoryRepo := repository.NewCategoryRepository(db)
 	categoryService := service.NewCategoryService(categoryRepo)
 	categoryController := category.NewCategoryController(categoryService)
@@ -71,8 +82,8 @@ func initHttpServer(db *sqlx.DB) *http.Server {
 	memoService := service.NewMemoService(memoRepo, categoryRepo)
 	memoController := memo.NewMemoController(memoService)
 
-	authRepo := repository.NewAuthRepository(db)
-	authService := service.NewAuthService(authRepo)
+	authRepo := repository.NewAuthRepository(db, rdb)
+	authService := service.NewAuthService(authRepo, emailService)
 	authController := auth.NewAuthController(authService)
 
 	memoController.Register(r)

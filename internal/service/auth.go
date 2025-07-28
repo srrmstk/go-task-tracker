@@ -2,32 +2,32 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"go-task-tracker/internal/helpers"
 	"go-task-tracker/internal/model"
 	"go-task-tracker/internal/repository"
-	"os"
-	"strconv"
+	"math/rand"
 	"time"
 
 	"github.com/google/uuid"
-	"gopkg.in/mail.v2"
 )
 
 type AuthService struct {
-	r repository.AuthRepository
+	r  repository.AuthRepository
+	es *EmailService
 }
 
-func NewAuthService(r repository.AuthRepository) *AuthService {
-	return &AuthService{r: r}
+func NewAuthService(r repository.AuthRepository, es *EmailService) *AuthService {
+	return &AuthService{r: r, es: es}
 }
 
-func (s *AuthService) Register(ctx context.Context, dto model.UserRegisterDTO) error {
+func (s *AuthService) Register(ctx context.Context, dto model.UserRegisterDTO) (*model.UserRegisterResponseDTO, error) {
 	now := time.Now().UTC()
 
 	pass, err := helpers.HashPassword(dto.Password)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	user := &model.User{
@@ -40,15 +40,22 @@ func (s *AuthService) Register(ctx context.Context, dto model.UserRegisterDTO) e
 	}
 
 	if err := s.r.Register(ctx, user); err != nil {
-		return err
+		return nil, err
 	}
 
-	err = SendEmail(dto.Email)
-	if err != nil {
-		return err
+	code := generateCode()
+	if err := s.r.SetCode(ctx, user.ID, code); err != nil {
+		return nil, err
 	}
 
-	return nil
+	if err = s.es.SendEmail(dto.Email,
+		"ContentLog Verification",
+		"Your verification code for ContentLog!",
+		fmt.Sprintf("Your code <b>%s</b>", code)); err != nil {
+		return nil, err
+	}
+
+	return &model.UserRegisterResponseDTO{ID: user.ID}, nil
 }
 
 func (s *AuthService) Login(ctx context.Context, dto model.UserLoginDTO) (string, error) {
@@ -56,6 +63,10 @@ func (s *AuthService) Login(ctx context.Context, dto model.UserLoginDTO) (string
 
 	if err != nil || !helpers.CheckPasswordHash(dto.Password, user.Password) {
 		return "", fmt.Errorf("invalid credentials")
+	}
+
+	if !user.Confirmed {
+		return "", fmt.Errorf("email is not confirmed")
 	}
 
 	token, err := helpers.GenerateJWT(user.ID)
@@ -66,26 +77,28 @@ func (s *AuthService) Login(ctx context.Context, dto model.UserLoginDTO) (string
 	return token, nil
 }
 
-func SendEmail(to string) error {
-	from := os.Getenv("SMTP_FROM")
-	password := os.Getenv("SMTP_PASS")
-	smtpHost := os.Getenv("SMTP_HOST")
-	smtpPort, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
+func (s *AuthService) Verify(ctx context.Context, id uuid.UUID, dto *model.UserVerifyDTO) error {
+	res, err := s.r.GetCode(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	m := mail.NewMessage()
-	m.SetHeader("From", from)
-	m.SetAddressHeader("From", from, "ContentLog Verification")
-	m.SetHeader("To", to)
-	m.SetHeader("Subject", "Your verification code for ContentLog!")
-	m.SetBody("text/html", fmt.Sprintf("Your code <b>%d</b>", 123456))
-	d := mail.NewDialer(smtpHost, smtpPort, from, password)
+	if res != dto.Code {
+		return errors.New("wrong code")
+	}
 
-	if err := d.DialAndSend(m); err != nil {
+	if err := s.r.Verify(ctx, id, time.Now().UTC()); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func generateCode() string {
+	code := ""
+	for i := 0; i < 6; i++ {
+		code += fmt.Sprintf("%d", rand.Intn(10))
+	}
+
+	return code
 }

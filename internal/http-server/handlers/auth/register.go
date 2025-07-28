@@ -11,7 +11,7 @@ import (
 )
 
 type register interface {
-	Register(ctx context.Context, dto model.UserRegisterDTO) error
+	Register(ctx context.Context, dto model.UserRegisterDTO) (*model.UserRegisterResponseDTO, error)
 }
 
 func RegisterHandler(reg register) http.HandlerFunc {
@@ -28,11 +28,13 @@ func RegisterHandler(reg register) http.HandlerFunc {
 			return
 		}
 
-		if err := reg.Register(r.Context(), dto); err != nil {
+		res, err := reg.Register(r.Context(), dto)
+		if err != nil {
 			helpers.JsonError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(res)
 	}
 }

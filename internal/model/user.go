@@ -17,7 +17,7 @@ type User struct {
 }
 
 type UserLoginDTO struct {
-	Email    string `json:"username" validate:"required,email"`
+	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,gte=8"`
 }
 
@@ -25,4 +25,12 @@ type UserRegisterDTO struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required,gte=8"`
 	Email    string `json:"email" validate:"required,email"`
+}
+
+type UserRegisterResponseDTO struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type UserVerifyDTO struct {
+	Code string `json:"code" validate:"required"`
 }
