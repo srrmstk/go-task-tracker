@@ -21,3 +21,12 @@ services:
     command: sh -c 'exec redis-server --requirepass "$REDIS_PASSWORD"'
     ports:
       - "6380:6379"
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password

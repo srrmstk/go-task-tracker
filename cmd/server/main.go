@@ -20,6 +20,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
@@ -65,6 +66,14 @@ func initHttpServer(db *sqlx.DB, rdb *redis.Client) *http.Server {
 	r := chi.NewRouter()
 	r.Use(chiMiddleware.Logger)
 	r.Use(middleware.JsonMiddleware)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		helpers.JsonError(w, "Not found", http.StatusNotFound)
 	})
@@ -116,3 +125,5 @@ func gracefulShutdown(ctx context.Context, server *http.Server) {
 	slog.Info("Gracefully shutting down")
 	server.Shutdown(ctx)
 }
+
+// TODO: add redis queue
